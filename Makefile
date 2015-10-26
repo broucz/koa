@@ -2,10 +2,8 @@ SRC = lib/*.js
 
 REQUIRED = --require should --require should-http
 
-TESTS = test/application/* \
-	test/context/* \
-	test/request/* \
-	test/response/*
+TESTS-NEXT := $(wildcard test/**/*.next.js)
+TESTS := $(filter-out $(TESTS-NEXT), $(wildcard test/**/*.js))
 
 lint:
 	@./node_modules/.bin/eslint lib test
@@ -17,13 +15,32 @@ test:
 		$(TESTS) \
 		--bail
 
+test-next:
+	@NODE_ENV=test node \
+		./node_modules/.bin/_mocha \
+		--compilers js:babel/register \
+		$(REQUIRED) \
+		$(TESTS-NEXT) \
+		--bail
+
 test-cov:
 	@NODE_ENV=test node \
 		./node_modules/.bin/istanbul cover \
 		./node_modules/.bin/_mocha \
-		-- -u exports \
+		-- \
 		$(REQUIRED) \
 		$(TESTS) \
+		--bail
+
+
+test-next-cov:
+	@NODE_ENV=test node \
+		./node_modules/.bin/istanbul cover \
+		./node_modules/.bin/_mocha \
+		-- --compilers js:babel/register \
+		-u exports \
+		$(REQUIRED) \
+		$(TESTS-NEXT) \
 		--bail
 
 test-travis: lint
@@ -31,7 +48,7 @@ test-travis: lint
 		./node_modules/.bin/istanbul cover \
 		./node_modules/.bin/_mocha \
 		--report lcovonly \
-		-- -u exports \
+		-- \
 		$(REQUIRED) \
 		$(TESTS) \
 		--bail
